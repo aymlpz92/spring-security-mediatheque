@@ -2,6 +2,7 @@ package fr.simplon.springsecuritymediatheque.model.entity;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,19 +12,22 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import fr.simplon.springsecuritymediatheque.model.BookCategory;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.NoArgsConstructor;
 
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name ="book")
-@Getter
-@Setter
 public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false)
     private String title;

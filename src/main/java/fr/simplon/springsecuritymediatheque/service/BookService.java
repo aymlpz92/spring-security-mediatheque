@@ -2,6 +2,7 @@ package fr.simplon.springsecuritymediatheque.service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
@@ -23,25 +24,25 @@ public class BookService {
         return bookRepository.findAll();
     }
 
-    public Optional<Book> getBookById(String id) {
-        return bookRepository.findById(id).isEmpty() ? bookRepository.findById(id) : Optional.empty();
+    public Optional<Book> getBookById(UUID id) {
+        return bookRepository.findById(id).isEmpty() ? Optional.empty() : bookRepository.findById(id);
     }
 
-    public Optional<Book> updateBook(String id, Book updateBook) {
+    public Optional<Book> updateBook(UUID id, Book updateBook) {
         Optional<Book> optionalBook = bookRepository.findById(id);
         if (optionalBook.isPresent()) {
-            Book currentBook = optionalBook.get();
-            currentBook.setAuthor(updateBook.getAuthor());
-            currentBook.setTitle(updateBook.getTitle());
-            currentBook.setBookCategories(updateBook.getBookCategories());
-            currentBook.setPublicationDate(updateBook.getPublicationDate());
-            currentBook.setStock(updateBook.getStock());
-            return Optional.of(currentBook);
+            return Optional.of(Book.builder()
+                    .title(updateBook.getTitle())
+                    .author(updateBook.getAuthor())
+                    .publicationDate(updateBook.getPublicationDate())
+                    .bookCategories(updateBook.getBookCategories())
+                    .stock(updateBook.getStock())
+                    .build());
         }
         return Optional.empty();
     }
 
-    public void deleteBook(String id) {
+    public void deleteBook(UUID id) {
         Optional<Book> optionalBook = bookRepository.findById(id);
         if (optionalBook.isPresent()) {
             bookRepository.deleteById(id);
