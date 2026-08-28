@@ -1,7 +1,7 @@
 package fr.simplon.springsecuritymediatheque.model.entity;
 
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.Set;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -36,10 +36,10 @@ public class Book {
     private String author;
 
     @Column(nullable = false)
-    private List<BookCategory> bookCategories;
+    private Set<BookCategory> categories;
 
     @Column(nullable = false)
-    private Date publicationDate;
+    private LocalDate publicationDate;
 
     @Column(nullable = false)
     private Integer stock;

@@ -4,10 +4,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import fr.simplon.springsecuritymediatheque.model.dtos.books.BookDTO;
+import fr.simplon.springsecuritymediatheque.model.dtos.books.BookIDResponse;
 import fr.simplon.springsecuritymediatheque.model.entity.Book;
+import fr.simplon.springsecuritymediatheque.model.exceptions.BookNotFoundException;
+import fr.simplon.springsecuritymediatheque.model.mappers.BookMapper;
 import fr.simplon.springsecuritymediatheque.repository.BookRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -16,36 +20,56 @@ import lombok.RequiredArgsConstructor;
 public class BookService {
     private final BookRepository bookRepository;
 
-    public Book createBook(Book book) {
-        return bookRepository.save(book);
+    public BookIDResponse createBook(BookDTO bookDto) {
+        Book book = BookMapper.dtoToEntity(bookDto);
+        bookRepository.save(book);
+        return new BookIDResponse(book.getTitle(), book.getId());
     }
 
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public List<BookDTO> getAllBooks() {
+        return bookRepository.findAll().stream()
+                .map(BookMapper::bookToDto)
+                .toList();
     }
 
-    public Optional<Book> getBookById(UUID id) {
-        return bookRepository.findById(id).isEmpty() ? Optional.empty() : bookRepository.findById(id);
+    public BookDTO getBookById(UUID id) {
+        return BookMapper.bookToDto(
+                bookRepository.findById(id)
+                        .orElseThrow(() -> new BookNotFoundException("Ce livre n'existe pas"))
+        );
     }
 
-    public Optional<Book> updateBook(UUID id, Book updateBook) {
+    public BookDTO getBookByTitle(String title) {
+        return BookMapper.bookToDto(
+                bookRepository.findByTitle(title)
+                        .orElseThrow(() -> new BookNotFoundException("Ce livre n'xiste pas"))
+        );
+    }
+
+    @Transactional
+    public BookIDResponse updateBook(UUID id, BookDTO updateBook) {
         Optional<Book> optionalBook = bookRepository.findById(id);
         if (optionalBook.isPresent()) {
-            return Optional.of(Book.builder()
-                    .title(updateBook.getTitle())
-                    .author(updateBook.getAuthor())
-                    .publicationDate(updateBook.getPublicationDate())
-                    .bookCategories(updateBook.getBookCategories())
-                    .stock(updateBook.getStock())
-                    .build());
+            Book book = Book.builder()
+                    .title(updateBook.title())
+                    .author(updateBook.author())
+                    .publicationDate(updateBook.publicationDate())
+                    .categories(updateBook.categories())
+                    .stock(updateBook.stock())
+                    .build();
+            return new BookIDResponse(book.getTitle(), id);
+
         }
-        return Optional.empty();
+        throw new BookNotFoundException("Ce livre n'existe pas");
     }
 
     public void deleteBook(UUID id) {
         Optional<Book> optionalBook = bookRepository.findById(id);
         if (optionalBook.isPresent()) {
             bookRepository.deleteById(id);
+        } else {
+            throw new BookNotFoundException("Ce livre n'existe pas");
         }
+
     }
 }
