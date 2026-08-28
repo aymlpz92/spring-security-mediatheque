@@ -9,14 +9,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import fr.simplon.springsecuritymediatheque.model.dtos.users.LoginRequest;
 import fr.simplon.springsecuritymediatheque.model.dtos.users.RegisterRequest;
-import fr.simplon.springsecuritymediatheque.model.dtos.users.RegisterResponse;
 import fr.simplon.springsecuritymediatheque.model.entity.RoleType;
+import fr.simplon.springsecuritymediatheque.model.entity.User;
 import fr.simplon.springsecuritymediatheque.model.mappers.UserMapper;
 import fr.simplon.springsecuritymediatheque.repository.UserRepository;
 import tools.jackson.databind.ObjectMapper;
@@ -34,7 +33,6 @@ class AuthControllerIntegrationTests {
     @Autowired
     private ObjectMapper objectMapper;
 
-
     @Test
     void shouldCreateUserWithHashedPassword() throws Exception {
         RegisterRequest request = RegisterRequest.builder()
@@ -44,15 +42,10 @@ class AuthControllerIntegrationTests {
                 .authorities(Set.of(RoleType.ADMIN))
                 .build();
 
-        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/register")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(MockMvcResultMatchers.status().isCreated())
-                .andReturn();
-
-        userRepository.save(UserMapper.registerRequestToUser(request));
-
-        RegisterResponse response = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), RegisterResponse.class);
+                .andExpect(MockMvcResultMatchers.status().isCreated());
 
         Assertions.assertEquals(1, userRepository.findAll().size());
     }
@@ -71,7 +64,11 @@ class AuthControllerIntegrationTests {
                 .password(register.password())
                 .build();
 
-        userRepository.save(UserMapper.registerRequestToUser(register));
+        User user = userRepository.save(UserMapper.registerRequestToUser(register));
+
+        System.out.println(user.getId());
+        System.out.println(user.getPassword());
+        System.out.println(user.getEmail());
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
